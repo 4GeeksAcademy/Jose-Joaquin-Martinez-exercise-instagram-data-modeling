@@ -1,6 +1,6 @@
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, Enum
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy import create_engine
 from eralchemy2 import render_er
@@ -35,33 +35,47 @@ class User_private(Base):
     password=Column(String(15), nullable=False)
     email= Column(String(20), nullable=False, unique=True)
 
+
 class User_public (Base):
     __tablename__='User Public'
     user_public_id= Column(Integer, primary_key=True)
     user_name=Column(String(15), nullable=False, unique= True)
-    profile_img =Column(String(250), nullable=True)
-    number_followers = Column(Integer, nullable=True)
-    number_following = Column (Integer, nullable=True)
     description = Column(String(250), nullable=True, unique=True)
     user_private_id = Column(Integer, ForeignKey(User_private.user_private_id))
 
-class Likes(Base):
-    __tablename__='Likes'
-    like_id=Column(Integer, primary_key=True)
-    likes= Column(Integer, nullable=True)
-class Coments(Base):
-    __tablename__='Coments'
-    coment_id= Column(Integer, primary_key=True)
-    coment= Column(String(250), nullable=True)
+class Multimedia (Base):
+    __tablename__='Multimedia'
+    multimedia_id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey(User_public.user_public_id))
+    media= Column(String(250), nullable= False) 
+
+class Images (Base):
+    __tablename__='Images'
+    images_id = Column(Integer, primary_key=True)
+    profile_photo = Column(Boolean)  # Checking if the image is a profile image then its True and show the image and shows nothing if False
+    multimedia_id = Column(Integer, ForeignKey(Multimedia.multimedia_id))
+    user_public_id=Column(Integer, ForeignKey(User_public.user_public_id))
 
 class Post (Base):
     __tablename__='Post'
     post_id= Column(Integer, primary_key=True)
     user_public_id=Column(Integer, ForeignKey(User_public.user_public_id))
-    coment_id=Column(Integer, ForeignKey(Coments.coment_id))
-    like_id= Column(Integer, ForeignKey(Likes.like_id))
-    coments =Column(String(250), ForeignKey(Coments.coment))
-    likes = Column(Integer, nullable=True)
+    image_id = Column(Integer, ForeignKey(Images.images_id)) 
+    post = Column(Enum, nullable=False)
+
+
+class Likes(Base):
+    __tablename__='Likes'
+    like_id=Column(Integer, primary_key=True)
+    likes= Column(Integer, nullable=True)
+    post_id = Column(Integer, ForeignKey(Post.post_id))
+    user_liking_id = Column (Integer, ForeignKey(User_public.user_public_id))
+class Coments(Base):
+    __tablename__='Coments'
+    coment_id= Column(Integer, primary_key=True)
+    coment= Column(String(250), nullable=True)
+    post_id= Column(Integer, ForeignKey(Post.post_id))
+    user_commenting_id = Column (Integer, ForeignKey(User_public.user_public_id))
 
 class Feed (Base):
     __tablename__='Feed'  
@@ -73,28 +87,21 @@ class Feed (Base):
 class Followers (Base):
     __tablename__='Followers'
     follower_id= Column(Integer, primary_key=True)
-    user_public_id=Column(Integer, ForeignKey(User_public.user_public_id))
-    user_name= Column(String(10), nullable=False, unique=True)
-
-class Following (Base):
-    __tablename__='Following'
-    following_id= Column(Integer, primary_key=True)
-    user_public_id=Column(Integer, ForeignKey(User_public.user_public_id))
-    user_name= Column(String(10), nullable=False, unique=True) 
-    profile_img = Column(String(250),  ForeignKey(User_public.profile_img),nullable =True, unique=True)  
+    user_followers=Column(Integer, ForeignKey(User_public.user_public_id))
+    user_following=Column(Integer, ForeignKey(User_public.user_public_id))
 
 class DMs (Base):
     __tablename__='DMs'
     dms_id= Column(Integer, primary_key=True)
-    user_name=Column(String(20),  ForeignKey(User_public.user_name),unique=True, nullable=False)
-    user_public_id=Column(Integer, ForeignKey(User_public.user_public_id))
+    user_reciver_id=Column(Integer, ForeignKey(User_public.user_public_id))
+    user_sending_id=Column(Integer, ForeignKey(User_public.user_public_id))
     dm= Column(String(250), nullable=False, unique=True)
 
 class Stories(Base):
     __tablename__='Stories'
     storie_id= Column(Integer, primary_key=True)
     user_public_id=Column(Integer, ForeignKey(User_public.user_public_id))
-    storie= Column(String, nullable=False, unique=True)
+    image_id = Column(Integer, ForeignKey(Images.images_id))
 
 ## Draw from SQLAlchemy base
 try:
